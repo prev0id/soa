@@ -1,0 +1,138 @@
+specification {
+  element actor
+  element system
+  element component
+}
+
+model {
+  customer = actor 'Пользователь' {
+    description 'Обычный юзер'
+    style {
+      shape person
+    }
+  }
+
+  business = actor 'Бизнес' {
+    description 'Представитель компании'
+    style {
+      shape person
+    }
+  }
+
+  containers = system 'Платформа программ лояльности' {
+    component ui 'Frontend' {
+      description 'какой-то фронт ¯\_(ツ)_/¯'
+      style {
+        icon tech:nextjs
+        shape browser
+      }
+    }
+    component api 'API Gateway' {
+      description '
+        принимает запросы UI, перенаправляет их в другие сервисы
+      '
+      style {
+        icon tech:go
+      }
+    }
+    component user 'User service' {
+      description '
+        регистрация, аутентификация, хранение данных о пользователях и ролях
+      '
+     style {
+        icon tech:go
+      }
+    }
+    component user_db 'User DataBase' {
+      description '
+        хранение данных о пользователях и ролях
+      '
+      style {
+        shape storage
+        icon tech:postgresql
+        multiple true
+      }
+    }
+    component promo 'Promo service' {
+      description '
+        управление промокодами, предложениями и комментариями
+      '
+      style {
+        icon tech:go
+      }
+    }
+    component promo_db 'Promo DataBase' {
+      description '
+        хранение постов, промокодов, комментариев
+      '
+      style {
+        shape storage
+        icon tech:postgresql
+      }
+    }
+    component statistics 'Statistics service' {
+      description '
+        подсчет просмотров, лайков, комментариев.  
+      '
+      style {
+        icon tech:go
+      }
+    }
+    component statistics_db 'Statistics DataBase' {
+      description '
+        хранение статистики просмотров, лайков, комментариев
+      '
+      style {
+        shape storage
+        icon https://upload.wikimedia.org/wikipedia/commons/0/0e/Clickhouse.png
+      }
+    }
+    component kafka 'Брокер сообщений' {
+      description '
+        подсчет просмотров, лайков, комментариев.  
+      '
+      style {
+        icon tech:kafka
+        shape queue
+      }
+    }
+
+    ui -> api 'fetches via HTTPS'
+    api -> user 'регистрация, аутентификация'
+    api -> promo 'получение промо, комментариев'
+    api -> statistics 'запрос статистики'
+    api -> kafka 'просмотр, лайк, комментарий'
+    kafka -> statistics 'просмотр, лайк, комментарий'
+    kafka -> promo 'лайк, комментарий'
+    user -> user_db ''
+    promo -> promo_db ''
+    statistics -> statistics_db ''
+  }
+
+  customer -> ui 'регистрация пользователя'
+  customer -> ui 'лайк/просмотр/комментарий'
+
+  business -> ui 'регистрация пользователя бизнесса'
+  business -> ui 'создание промо/лайк/просмотр/комментарий'
+  business -> ui 'просмотр статистики по посту'
+}
+
+views {
+
+  view system_context {
+    title 'System Context'
+
+    include *
+  }
+
+  view container of containers {
+    include *
+
+    style * {
+      opacity 25%
+    }
+    style customer {
+      color muted
+    }
+  }
+}
