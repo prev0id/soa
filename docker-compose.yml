@@ -25,5 +25,16 @@ services:
     ports:
       - "8081:8081"
 
+  api-service:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: api-service
+    restart: on-failure
+    depends_on:
+      - user-service
+    ports:
+      - "8080:8080"
+
 volumes:
   pgdata:
