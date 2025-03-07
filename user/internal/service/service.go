@@ -105,7 +105,7 @@ func (s *UserService) GetProfile(ctx context.Context, userID int64) (*domain.Use
 	if err != nil {
 		return nil, err
 	}
-	if dbUser == nil {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, domain.ErrUserNotFound
 	}
 	return convertDBUserToDomain(dbUser), nil

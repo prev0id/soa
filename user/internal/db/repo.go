@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -59,8 +58,8 @@ func (r *UserRepository) GetUserByLogin(ctx context.Context, login string) (*Use
 		QueryRow(ctx, query, login).
 		Scan(&user.ID, &user.Login, &user.Password, &user.Email, &user.FirstName,
 			&user.LastName, &user.BirthDate, &user.Phone, &user.CreatedAt, &user.UpdatedAt)
-	if err == pgx.ErrNoRows {
-		return nil, nil
+	if err != nil {
+		return nil, err
 	}
 	return user, nil
 }

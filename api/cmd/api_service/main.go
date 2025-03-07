@@ -13,10 +13,6 @@ func main() {
 			req.URL.Host = "user-service:8081"
 
 			req.URL.Path = strings.TrimPrefix(req.URL.Path, "/user")
-			if req.URL.Path == "" {
-				req.URL.Path = "/"
-			}
-
 			req.Host = req.URL.Host
 		},
 	}
