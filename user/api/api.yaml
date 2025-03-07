@@ -1,0 +1,158 @@
+openapi: 3.0.3
+info:
+  title: User Authentication API
+  description: API для регистрации, аутентификации и управления профилем пользователя
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: API Gateway
+  - url: http://localhost:8081
+    description: User Service
+paths:
+  /register:
+    post:
+      summary: Регистрация нового пользователя
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [login, password, email]
+              properties:
+                login:
+                  type: string
+                  example: "user123"
+                password:
+                  type: string
+                  format: password
+                  example: "securepassword"
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        "200":
+          description: Пользователь успешно зарегистрирован
+        "400":
+          description: Ошибка валидации входных данных
+        "500":
+          description: Внутренняя ошибка
+  /login:
+    post:
+      summary: Аутентификация пользователя
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [login, password]
+              properties:
+                login:
+                  type: string
+                  example: "user123"
+                password:
+                  type: string
+                  format: password
+                  example: "securepassword"
+      responses:
+        "200":
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "blablabla..."
+        "401":
+          description: Неверный логин или пароль
+        "500":
+          description: Внутренняя ошибка
+  /profile:
+    get:
+      summary: Получение данных профиля
+      operationId: getUserProfile
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Данные профиля пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  login:
+                    type: string
+                    example: "user123"
+                  email:
+                    type: string
+                    format: email
+                    example: "user@example.com"
+                  first_name:
+                    type: string
+                    example: "Иван"
+                  last_name:
+                    type: string
+                    example: "Иванов"
+                  birth_date:
+                    type: string
+                    format: date
+                    example: "1990-01-01"
+                  phone:
+                    type: string
+                    example: "+79001234567"
+        "401":
+          description: Требуется аутентификация
+        "500":
+          description: Внутренняя ошибка
+    put:
+      summary: Обновление профиля пользователя
+      operationId: updateUserProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  example: "Иван"
+                last_name:
+                  type: string
+                  example: "Иванов"
+                birth_date:
+                  type: string
+                  format: date
+                  example: "1990-01-01"
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                phone:
+                  type: string
+                  example: "+79001234567"
+      responses:
+        "200":
+          description: Профиль успешно обновлен
+        "400":
+          description: Ошибка валидации
+        "401":
+          description: Требуется аутентификация
+        "500":
+          description: Внутренняя ошибка
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
