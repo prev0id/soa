@@ -1,27 +1,40 @@
 services:
-  postgres:
+  # user-postgres:
+  #   image: postgres:13
+  #   container_name: user-postgres
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: user
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: users_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+
+  promo-postgres:
     image: postgres:13
-    container_name: postgres
+    container_name: user-postgres
     restart: always
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: users_db
+      POSTGRES_DB: promo_db
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  user-service:
-    build:
-      context: ./user
-      dockerfile: Dockerfile
-    container_name: user-service
-    restart: on-failure
-    depends_on:
-      - postgres
-    ports:
-      - "8081:8081"
+  # user-service:
+  #   build:
+  #     context: ./user
+  #     dockerfile: Dockerfile
+  #   container_name: user-service
+  #   restart: on-failure
+  #   depends_on:
+  #     - user-postgres
+  #   ports:
+  #     - "8081:8081"
 
   api-service:
     build:
@@ -30,9 +43,82 @@ services:
     container_name: api-service
     restart: on-failure
     depends_on:
-      - user-service
+      # - user-service
+      - promo-service
+    ports:
+      - "12300:12300"
+
+  promo-service:
+    build:
+      context: ./promo
+      dockerfile: Dockerfile
+    container_name: promo-service
+    restart: on-failure
+    depends_on:
+      - kafka
+      - promo-postgres
+    ports:
+      - "12301:12301"
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: bitnami/kafka:3.9
+    container_name: kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "kafka-topics.sh",
+          "--bootstrap-server=localhost:9092",
+          "--list",
+        ]
+      start_period: 5s
+      interval: 2s
+
+  init-kafka:
+    image: bitnami/kafka:3.9
+    container_name: init-kafka
+    working_dir: /opt/bitnami/kafka/bin
+    entrypoint: ["/bin/sh", "-c"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: >
+      kafka-topics.sh --create --if-not-exists --topic client-registrations --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092 &&
+      kafka-topics.sh --create --if-not-exists --topic likes --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092 &&
+      kafka-topics.sh --create --if-not-exists --topic clicks --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092 &&
+      kafka-topics.sh --create --if-not-exists --topic comments --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092 &&
+      kafka-topics.sh --create --if-not-exists --topic views --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
     ports:
       - "8080:8080"
+    depends_on:
+      - kafka
 
 volumes:
   pgdata:
