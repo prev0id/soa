@@ -1,0 +1,191 @@
+openapi: 3.0.3
+servers:
+  - url: /v1
+paths:
+  /clients:
+    post:
+      operationId: RegisterClient
+      summary: Register a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - client_id
+              properties:
+                client_id:
+                  type: string
+      responses:
+        "200":
+          description: Client registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  registered_at:
+                    type: string
+                    format: date-time
+        "400":
+          description: Invalid request
+        "500":
+          description: Server error
+  /promos/views:
+    post:
+      operationId: ViewPromo
+      summary: Record a promo view
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - client_id
+                - entity_id
+              properties:
+                client_id:
+                  type: string
+                entity_id:
+                  type: string
+      responses:
+        "200":
+          description: Promo view recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  viewed_at:
+                    type: string
+                    format: date-time
+        "400":
+          description: Invalid request
+        "500":
+          description: Server error
+  /promos/clicks:
+    post:
+      operationId: ClickPromo
+      summary: Record a promo click
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - client_id
+                - entity_id
+              properties:
+                client_id:
+                  type: string
+                entity_id:
+                  type: string
+      responses:
+        "200":
+          description: Promo click recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  clicked_at:
+                    type: string
+                    format: date-time
+        "400":
+          description: Invalid request
+        "500":
+          description: Server error
+  /promos/comments:
+    post:
+      operationId: CommentPromo
+      summary: Add a comment to a promo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - client_id
+                - entity_id
+                - message
+              properties:
+                client_id:
+                  type: string
+                entity_id:
+                  type: string
+                message:
+                  type: string
+      responses:
+        "200":
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comment_id:
+                    type: string
+                  commented_at:
+                    type: string
+                    format: date-time
+        "400":
+          description: Invalid request
+        "500":
+          description: Server error
+  /promos/{entity_id}/comments:
+    get:
+      operationId: ListComments
+      summary: List comments for a promo
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: page_token
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        comment_id:
+                          type: string
+                        client_id:
+                          type: string
+                        message:
+                          type: string
+                        commented_at:
+                          type: string
+                          format: date-time
+                  next_page_token:
+                    type: string
+        "400":
+          description: Invalid request
+        "500":
+          description: Server error
