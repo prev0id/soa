@@ -1,41 +1,4 @@
 services:
-  # user-postgres:
-  #   image: postgres:13
-  #   container_name: user-postgres
-  #   restart: always
-  #   environment:
-  #     POSTGRES_USER: user
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: users_db
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
-
-  promo-postgres:
-    image: postgres:13
-    container_name: user-postgres
-    restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: promo_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  # user-service:
-  #   build:
-  #     context: ./user
-  #     dockerfile: Dockerfile
-  #   container_name: user-service
-  #   restart: on-failure
-  #   depends_on:
-  #     - user-postgres
-  #   ports:
-  #     - "8081:8081"
-
   api-service:
     build:
       context: ./api
@@ -45,6 +8,15 @@ services:
     depends_on:
       # - user-service
       - promo-service
+    ports:
+      - "12300:12300"
+
+  statistics-service:
+    build:
+      context: ./statistics
+      dockerfile: Dockerfile
+    container_name: statistics-service
+    restart: on-failure
     ports:
       - "12300:12300"
 
@@ -69,7 +41,7 @@ services:
       - "2181:2181"
 
   kafka:
-    image: bitnami/kafka:3.9
+    image: wurstmeister/kafka:latest
     container_name: kafka
     environment:
       - KAFKA_BROKER_ID=1
@@ -78,6 +50,7 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - ALLOW_PLAINTEXT_LISTENER=yes
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CREATE_TOPICS="view_promo:1:1,like_promo:1:1,comment_promo:1:1,view_post:1:1,like_post:1:1,comment_post:1:1"
     ports:
       - "9092:9092"
     depends_on:
@@ -93,21 +66,6 @@ services:
       start_period: 5s
       interval: 2s
 
-  init-kafka:
-    image: bitnami/kafka:3.9
-    container_name: init-kafka
-    working_dir: /opt/bitnami/kafka/bin
-    entrypoint: ["/bin/sh", "-c"]
-    depends_on:
-      kafka:
-        condition: service_healthy
-    command: >
-      kafka-topics.sh --create --if-not-exists --topic client-registrations --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092 &&
-      kafka-topics.sh --create --if-not-exists --topic likes --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092 &&
-      kafka-topics.sh --create --if-not-exists --topic clicks --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092 &&
-      kafka-topics.sh --create --if-not-exists --topic comments --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092 &&
-      kafka-topics.sh --create --if-not-exists --topic views --replication-factor 1 --partitions 1 --bootstrap-server kafka:9092
-
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -120,5 +78,14 @@ services:
     depends_on:
       - kafka
 
+  clickhouse:
+    image: yandex/clickhouse-server:21.3
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+
 volumes:
   pgdata:
+  clickhouse_data:

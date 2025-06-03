@@ -1,0 +1,73 @@
+syntax = "proto3";
+package statistics;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "../pkg/stats;statspb";
+
+service StatisticsService {
+    rpc GetPromoStats(GetPromoStatsRequest) returns (GetPromoStatsResponse);
+    rpc GetPromoDynamics(GetPromoDynamicsRequest) returns (GetPromoDynamicsResponse);
+    rpc GetTopPromos(GetTopPromosRequest) returns (GetTopPromosResponse);
+    rpc GetTopUsers(GetTopUsersRequest) returns (GetTopUsersResponse);
+}
+
+message GetPromoStatsRequest {
+    uint64 promo_id = 1;
+}
+
+message GetPromoStatsResponse {
+    uint64 views = 1;
+    uint64 likes = 2;
+    uint64 comments = 3;
+}
+
+message GetPromoDynamicsRequest {
+    uint64 promo_id = 1;
+    Metric metric = 2;
+    google.protobuf.Timestamp start_date = 3;
+    google.protobuf.Timestamp end_date = 4;
+}
+
+message GetPromoDynamicsResponse {
+    repeated DynamicsEntry entries = 1;
+}
+
+message GetTopPromosRequest {
+    Metric metric = 1;
+}
+
+message GetTopPromosResponse {
+    repeated TopPromo top_promos = 1;
+}
+
+message GetTopUsersRequest {
+    Metric metric = 1;
+}
+
+message GetTopUsersResponse {
+    repeated TopUser top_users = 1;
+}
+
+enum Metric {
+    VIEWS = 0;
+    LIKES = 1;
+    COMMENTS = 2;
+}
+
+message DynamicsEntry {
+    google.protobuf.Timestamp date = 1;
+    uint64 count = 2;
+}
+
+
+
+message TopPromo {
+    uint64 promo_id = 1;
+    uint64 count = 2;
+}
+
+message TopUser {
+    uint64 user_id = 1;
+    uint64 count = 2;
+}
