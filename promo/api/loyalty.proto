@@ -1,0 +1,74 @@
+syntax = "proto3";
+package loyalty;
+
+option go_package = "../pkg/loyalty;loyaltypb";
+
+import "google/protobuf/timestamp.proto";
+
+service LoyaltyCore {
+  rpc ViewPromo(ViewPromoRequest) returns (ViewPromoResponse);
+
+  rpc ClickPromo(ClickPromoRequest) returns (ClickPromoResponse);
+
+  rpc CommentPromo(CommentPromoRequest) returns (CommentPromoResponse);
+
+  rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse);
+}
+
+message RegisterClientRequest {
+  string client_id = 1;
+  google.protobuf.Timestamp registered_at = 2;
+}
+
+message RegisterClientResponse {
+  bool success = 1;
+}
+
+message ViewPromoRequest {
+  string client_id = 1;
+  string entity_id = 2;
+  google.protobuf.Timestamp viewed_at = 3;
+}
+
+message ViewPromoResponse {
+  bool success = 1;
+}
+
+message ClickPromoRequest {
+  string client_id = 1;
+  string entity_id = 2;
+  google.protobuf.Timestamp clicked_at = 3;
+}
+
+message ClickPromoResponse {
+  bool success = 1;
+}
+
+message CommentPromoRequest {
+  string client_id = 1;
+  string entity_id = 2;
+  string message = 3;
+  google.protobuf.Timestamp commented_at = 4;
+}
+
+message CommentPromoResponse {
+  string comment_id = 1;
+}
+
+message ListCommentsRequest {
+  string entity_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message Comment {
+  string comment_id = 1;
+  string client_id = 2;
+  string message = 3;
+  google.protobuf.Timestamp commented_at = 4;
+}
+
+message ListCommentsResponse {
+  repeated Comment comments = 1;
+  string next_page_token = 2;
+}
